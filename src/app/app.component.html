@@ -1,0 +1,99 @@
+<canvas #fx class="fx" aria-hidden="true"></canvas>
+<div class="shell" [class.is-lit]="lit && !blown">
+  <div class="bokeh" aria-hidden="true"></div>
+
+  @if (!isOpen) {
+    <!-- AVANT LE JOUR J : compte à rebours -->
+    <main class="wait" aria-live="polite">
+      <p class="kicker">Une surprise se prépare pour {{ b.name }}</p>
+      <div class="arch">
+        <img [src]="b.heroImage" alt="" [style.filter]="'blur(' + teaserBlur + 'px)'" (error)="imageFailed($event)">
+        <span class="ph">?</span><span class="lock" aria-hidden="true">🔒</span>
+      </div>
+      <h1>{{ days > 1 ? 'J−' + days : 'C’est pour demain !' }}</h1>
+      <div class="count">
+        @for (u of countdown; track u.label) { <div><strong>{{ pad(u.value) }}</strong><span>{{ u.label }}</span></div> }
+      </div>
+      <p class="hint">{{ b.dateLabel }}, à minuit, la fête commence. Reviens à ce moment-là…</p>
+    </main>
+  } @else if (stage !== 'party') {
+    <!-- LE JOUR J : le gâteau -->
+    <main class="cakestage" [class.dark]="stage === 'dark'">
+      <h1>
+        @if (!lit) { Une surprise t’attend, {{ b.name }} }
+        @else if (!ready) { Écoute bien… }
+        @else if (!blown) { Fais un vœu, puis souffle ! }
+        @else { Ton vœu s’envole… }
+      </h1>
+      <button class="cake" [class.lit]="lit" [class.out]="blown" (click)="cakeTap()" aria-label="Le gâteau d’anniversaire">
+        <span class="candles"><i><b class="flame"></b></i><i><b class="flame"></b></i><i><b class="flame"></b></i><i><b class="flame"></b></i><i><b class="flame"></b></i></span>
+        <span class="tier t3"></span><span class="tier t2"></span><span class="tier t1"></span><span class="plate"></span>
+      </button>
+      <div class="actions">
+        @if (!lit) { <button class="btn" (click)="light()">Allumer les bougies</button> }
+        @else if (ready && !blown) {
+          <button class="btn" (click)="blow()">Souffler les bougies</button>
+          @if (micMessage) { <p class="mic" aria-live="polite">🎤 {{ micMessage }}</p> }
+        }
+      </div>
+    </main>
+  } @else {
+    <!-- LA FÊTE -->
+    <main class="party">
+      <section class="hero" (pointermove)="tilt($event)">
+        <div class="box" [style.--rx]="rx + 'deg'" [style.--ry]="ry + 'deg'">
+          <span class="win"><span class="ph">✿</span><img class="flat" [src]="b.heroImage" alt="" [hidden]="cutOk" (error)="imageFailed($event)"></span>
+          <img class="cut" [src]="b.cutout" [alt]="'Portrait de ' + b.name" [hidden]="!cutOk" (load)="cutOk = true">
+          <span class="rim"></span>
+          <span class="tag"><small>Édition limitée</small><b>{{ b.name }}</b></span>
+        </div>
+        <div class="hero-text">
+          <p>Joyeux anniversaire</p>
+          <h1>{{ b.name }}</h1>
+          <p class="date">{{ b.dateLabel }}</p>
+          <p class="msg">{{ b.shortMessage }}</p>
+        </div>
+      </section>
+
+      <section>
+        <article class="paper">
+          <h2>À la belle personne que tu es</h2>
+          <p>{{ b.letter }}</p>
+          <p class="sign">Avec toute mon affection,<br><em>{{ b.signature }}</em></p>
+        </article>
+      </section>
+
+      <section class="ribbon" aria-label="Souvenirs">
+        @for (row of [rowA, rowB]; track $index) {
+          <div class="lane" [class.rev]="$index"><div class="belt">
+            @for (m of row; track $index) {
+              <div class="tile"><span class="ph">♡</span>
+                @if (isVideo(m)) { <video [src]="m" muted [muted]="true" autoplay loop playsinline webkit-playsinline preload="metadata" (error)="imageFailed($event)"></video> }
+                @else { <img [src]="m" alt="" loading="lazy" (error)="imageFailed($event)"> }
+              </div>
+            }
+          </div></div>
+        }
+      </section>
+
+      <section>
+        <h2 class="title">Éclate un ballon</h2>
+        <p class="sub">Chacun cache un souhait pour toi.</p>
+        <div class="bal-row">
+          @for (w of b.wishes; track w; let i = $index) {
+            @if (popped[i]) { <p class="wish">{{ w }}</p> }
+            @else { <button class="balloon" [style.--h]="i * 22 + 310" (click)="pop(i, $event)" aria-label="Éclater le ballon"></button> }
+          }
+        </div>
+      </section>
+
+      <section class="final">
+        <h2 class="title">Un dernier mot</h2>
+        <p>{{ b.secret }}</p>
+        <button class="btn" (click)="more()">Encore des confettis !</button>
+        <button class="link" (click)="replay()">Rallumer les bougies</button>
+      </section>
+      @if (b.music) { <button class="song" (click)="toggleMusic()" [attr.aria-label]="musicOn ? 'Couper la musique' : 'Lancer la musique'">{{ musicOn ? '♪' : '🔇' }}</button> }
+    </main>
+  }
+</div>

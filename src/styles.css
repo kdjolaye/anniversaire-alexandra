@@ -1,0 +1,3 @@
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#170c25;min-height:100vh;-webkit-font-smoothing:antialiased}
