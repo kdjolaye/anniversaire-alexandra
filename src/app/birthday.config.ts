@@ -13,7 +13,7 @@ export const BIRTHDAY = {
   /** Photo d'origine, affichée dans la boîte tant que le détourage n'existe pas. */
   heroImage: 'images/hero/portrait.jpg',
   /** Active les liens de test ?preview=jour et ?preview=avant. Mets false avant de publier. */
-  allowPreview: true,
+  allowPreview: false,
   /** Chemin de ta musique, ex. 'audio/musique.mp3' (laisse vide pour aucune musique). */
   music: 'audio/musique.mp3',
   /** Un souhait caché dans chaque ballon. */
