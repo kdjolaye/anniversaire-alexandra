@@ -25,7 +25,7 @@ Dépose les médias dans `public/` en respectant ces chemins :
 
 Les nouveaux fichiers vidéo ont été renommés `03.mp4` à `09.mp4` et ajoutés à `media` dans `src/app/birthday.config.ts`. Pour ajouter ou retirer des souvenirs, modifie cette liste en conservant les chemins relatifs à `public/`. Le ruban accepte `.mp4`, `.webm` et `.mov`. Les vidéos sont muettes, inline et en boucle. Si le téléphone a activé la réduction des animations, les rubans restent parcourables par balayage horizontal. Les anciens doublons `photo-01.jpeg` et `photo-02.jpeg` sont conservés.
 
-Le micro est demandé au toucher sur « Allumer les bougies ». Sur téléphone, la détection du souffle nécessite une adresse HTTPS et l'autorisation du navigateur ; si elle n'est pas disponible, le bouton « Souffler les bougies » déclenche toujours l'animation. La date est réglée à minuit UTC le 30 octobre 2026.
+Le micro n'est pas activé pendant la mélodie. Une fois celle-ci terminée, la personne touche « Activer le souffle », autorise le micro et souffle pour éteindre les bougies. Le bouton permet aussi de continuer sans micro si l'autorisation est refusée. La date est réglée à minuit UTC le 30 octobre 2026.
 
 ## Build et déploiement statique
 

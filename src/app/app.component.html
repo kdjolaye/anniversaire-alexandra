@@ -32,8 +32,8 @@
       <div class="actions">
         @if (!lit) { <button class="btn" (click)="light()">Allumer les bougies</button> }
         @else if (ready && !blown) {
-          <button class="btn" (click)="blow()">Souffler les bougies</button>
-          @if (micMessage) { <p class="mic" aria-live="polite">🎤 {{ micMessage }}</p> }
+          <button class="btn" (click)="beginBlow()">{{ micOn || micAttempted ? 'Souffler les bougies' : 'Activer le souffle' }}</button>
+          @if (micMessage) { <p class="mic" aria-live="polite">{{ micMessage }}</p> }
         }
       </div>
     </main>

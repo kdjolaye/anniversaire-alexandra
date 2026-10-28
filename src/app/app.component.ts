@@ -17,6 +17,7 @@ export class AppComponent implements OnInit {
   ready = false;    // mélodie terminée : on peut souffler
   blown = false;    // bougies soufflées
   micOn = false;
+  micAttempted = false;
   micMessage = '';
   cutOk = false;    // le portrait détouré est bien chargé
   rx = 0; ry = 0;   // inclinaison de la boîte
@@ -75,18 +76,15 @@ export class AppComponent implements OnInit {
     this.lit = true;
     let secs = 8;
     try { this.ac = new AudioContext(); secs = playMelody(this.ac); } catch { /* pas d'audio */ }
-    // Demander le micro pendant le geste de l'utilisateur est plus fiable sur mobile.
-    void this.startMic();
     setTimeout(() => { this.ready = true; }, secs * 1000 + 300);
   }
 
-  /** Détecte le souffle. Le bouton reste disponible si le téléphone bloque le micro. */
-  private async startMic(): Promise<void> {
+  /** Le micro ne démarre qu'après la mélodie, au clic volontaire sur le bouton de souffle. */
+  async beginBlow(): Promise<void> {
+    if (this.micOn || this.micAttempted) { this.blow(); return; }
+    this.micAttempted = true;
     try {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        this.micMessage = 'Le micro demande une adresse HTTPS. Tu pourras aussi appuyer sur « Souffler les bougies ». ';
-        return;
-      }
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone indisponible.');
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const ac = this.ac ?? new AudioContext();
       if (ac.state === 'suspended') await ac.resume();
@@ -98,39 +96,39 @@ export class AppComponent implements OnInit {
       let hits = 0;
       let warmupFrames = 0;
       this.micOn = true;
-      this.micMessage = 'Micro actif : souffle vers le téléphone ou touche le bouton pour continuer.';
+      this.micMessage = 'Souffle vers le téléphone, ou touche le bouton pour continuer.';
       const loop = () => {
         an.getByteTimeDomainData(buf);
-        let s = 0;
-        for (const v of buf) s += (v - 128) ** 2;
-        const level = Math.sqrt(s / buf.length) / 128;
+        let sum = 0;
+        for (const value of buf) sum += (value - 128) ** 2;
+        const level = Math.sqrt(sum / buf.length) / 128;
         warmupFrames++;
-        // Laisse le temps au téléphone de régler son niveau d'entrée avant d'écouter.
         hits = warmupFrames > 12 && level > 0.075 ? hits + 1 : 0;
         if (hits > 10) { this.blow(); return; }
         this.raf = requestAnimationFrame(loop);
       };
       loop();
-    } catch (error) {
+    } catch {
+      this.stopMic();
       this.micOn = false;
-      const name = error instanceof DOMException ? error.name : '';
-      this.micMessage = name === 'NotAllowedError' || name === 'SecurityError'
-        ? 'Accès au micro refusé. Autorise le micro dans le navigateur ou touche le bouton pour souffler.'
-        : 'Le micro ne répond pas sur cet appareil. Touche le bouton pour souffler.';
+      this.micMessage = 'Micro indisponible ou refusé. Touche le bouton pour souffler sans micro.';
     }
   }
 
   private stopMic(): void {
     cancelAnimationFrame(this.raf);
-    this.stream?.getTracks().forEach(t => t.stop());
+    this.stream?.getTracks().forEach(track => track.stop());
+    this.stream = undefined;
     this.micOn = false;
-    this.micMessage = '';
   }
 
-  cakeTap(): void { this.lit ? this.blow() : this.light(); }
+  cakeTap(): void {
+    if (!this.lit) this.light();
+    else if (this.ready) this.blow();
+  }
 
   blow(): void {
-    if (!this.lit || this.blown) return;
+    if (!this.lit || !this.ready || this.blown) return;
     this.blown = true;
     this.stopMic();
     setTimeout(() => this.stage = 'dark', 1200);
@@ -147,6 +145,7 @@ export class AppComponent implements OnInit {
 
   replay(): void {
     this.stage = 'cake'; this.lit = this.ready = this.blown = false;
+    this.micAttempted = false; this.micMessage = '';
     this.popped = this.popped.map(() => false);
     scrollTo(0, 0);
   }
